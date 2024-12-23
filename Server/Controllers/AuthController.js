@@ -4,13 +4,14 @@ const crypto = require("crypto")
 const multer = require("multer")
 const path = require("path")
 const fs = require("fs")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
 
 const ModifyToken = (id) => jwt.sign({ id }, "jwtScretKey", { expiresIn: "3d" })
 
 
-
+// const url = "http://localhost:8000/Images/"
+const url = "https://snoper-chat.onrender.com/Images/"
 const VerifyUser = (req, res, next) => {
     const token = req.cookies.real_chat_app || req.headers['authorization']?.split(' ')[1];; // الحصول على التوكن من الكوكيز
     if (!token) return res.status(404).json({ message: "No token Provider" })
@@ -28,8 +29,12 @@ const VerifyUser = (req, res, next) => {
 const storage = multer.diskStorage({
     destination: (req, file, cd) => {
         cd(null, "Public/Images")
+        console.log('Saving to1:');
+
     }, filename: (req, file, cd) => {
         cd(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname))
+        console.log('Saving to1:'); // تسجيل المسار في الطرفية
+
     }
 })
 
@@ -53,7 +58,7 @@ const CheakEmail = (req, res, next) => {
 const Register = (req, res) => {
     // return res.json("hello")
     const { name, email, password } = JSON?.parse(req.body.form);
-    const image = `http://localhost:8000/Images/${req.file.filename}`
+    const image = `${url}/${req.file.filename}`
     if (!name || !email || !password) return res.status(400).json({ message: "All fields are required" }); // تغيير الكود إلى 400
 
     else {

@@ -3,6 +3,7 @@ const cors = require("cors")
 
 const crypto = require("crypto")
 const { Server } = require("socket.io");
+const path = require("path")
 
 const UserRoutes = require("./Routes/UsersRoutes")
 const AuthRoutes = require("./Routes/AuthRoutes")
@@ -13,6 +14,8 @@ const app = express()
 const cookieParser = require('cookie-parser');
 const db = require("./Config/db");
 app.use(express.static('public'));
+app.use('/Images', express.static(path.join(__dirname, 'Public/Images')));
+
 
 app.use(cookieParser());
 app.use(cors())

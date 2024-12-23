@@ -5,17 +5,21 @@ const crypto = require("crypto")
 
 const multer = require('multer');
 const fs = require('fs');
-const path = require('path');
+const path = require('path'); 
 const { sqlFetchUserData } = require("./UserController");
 
-const url = "http://localhost:8000/Images/"
-
+// const url = "http://localhost:8000/Images/"
+const url = "https://snoper-chat.onrender.com/Images/"
 
 const storage = multer.diskStorage({
     destination: (req, file, cd) => {
         cd(null, "Public/Images")
+        console.log('Saving to1:'); // تسجيل المسار في الطرفية
+
     }, filename: (req, file, cd) => {
         cd(null, file.fieldname + "_" + Date.now() + path.extname(file.originalname))
+        console.log('Saving to1:'); // تسجيل المسار في الطرفية
+
     }
 })
 
