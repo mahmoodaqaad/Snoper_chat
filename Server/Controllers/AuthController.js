@@ -6,12 +6,12 @@ const path = require("path")
 const fs = require("fs")
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
-
+// const { url } = require("../index")
 const ModifyToken = (id) => jwt.sign({ id }, "jwtScretKey", { expiresIn: "3d" })
 
 
-// const url = "http://localhost:8000/Images/"
-const url = "https://snoper-chat.onrender.com/Images/"
+const url = "http://localhost:8000/Images/"
+// const url = "https://snoper-chat.onrender.com/Images/"
 const VerifyUser = (req, res, next) => {
     const token = req.cookies.real_chat_app || req.headers['authorization']?.split(' ')[1];; // الحصول على التوكن من الكوكيز
     if (!token) return res.status(404).json({ message: "No token Provider" })
@@ -57,8 +57,11 @@ const CheakEmail = (req, res, next) => {
 }
 const Register = (req, res) => {
     // return res.json("hello")
-    const { name, email, password } = JSON?.parse(req.body.form);
-    const image = `${url}/${req.file.filename}`
+    // const { name, email, password } = JSON?.parse(req.body.form);
+    const { name, email, password } = req.body.form;
+    // const image = `${url}/${req.file.filename}`
+    const { image } = req.body
+    // return res.json(image)
     if (!name || !email || !password) return res.status(400).json({ message: "All fields are required" }); // تغيير الكود إلى 400
 
     else {

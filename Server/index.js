@@ -13,6 +13,8 @@ const PostRoutes = require("./Routes/PostRoutes")
 const app = express()
 const cookieParser = require('cookie-parser');
 const db = require("./Config/db");
+const { savedPost } = require("./Controllers/postController");
+const { VerifyUser } = require("./Controllers/AuthController");
 app.use(express.static('public'));
 app.use('/Images', express.static(path.join(__dirname, 'Public/Images')));
 
@@ -38,9 +40,8 @@ const io = new Server(ExpressServer, { cors: "http://localhost:3000" })
 let onlineUser = []
 
 
-app.post("/api/test", (req, res) => {
-    res.json("hello")
-})
+
+// app.get("/api/test", VerifyUser, savedPost)
 
 io.on("connection", (socket) => {
 
@@ -229,14 +230,15 @@ io.on("connection", (socket) => {
         db.query(sqlFetchCurrentUser, [id], (err, dataNoft) => {
             if (err) return console.log("err>>>>>>>>>>>>>>", err);
 
+            const curentnofi = dataNoft[0]?.Noification ? JSON.parse(dataNoft[0]?.Noification) : [];
             if (dataNoft.length > 0) {
-                const curentnofi = dataNoft[0].Noification ? JSON.parse(dataNoft[0].Noification) : [];
                 const x = [obj, ...curentnofi];
 
                 const sql = "UPDATE users SET Noification = ? WHERE id = ?";
                 db.query(sql, [JSON.stringify(x), id], (err, response) => {
                     if (err) return console.log(err);
                     console.log("added");
+                    // console.log(x);
                 });
             }
         });
@@ -244,7 +246,15 @@ io.on("connection", (socket) => {
     }
     // disconnect
     socket.on("disconnect", () => {
+
         onlineUser = onlineUser.filter(user => user.socketId !== socket.id)
-        io.emit('getOnlineUsers', onlineUser)
+        setTimeout(() => {
+
+            io.emit('getOnlineUsers', onlineUser)
+        }, 2000);
     })
 })
+
+// const url = "https://snoper-chat.onrender.com/Images/"
+// const url = "http://localhost:8000/Images/"
+// module.exports = { url }

@@ -119,7 +119,8 @@ const myChats = (req, res) => {
     db.query(sql, [myId, myId], (err, chats) => {
         if (err) return res.status(500).json({ message: "Database error", error: err });
 
-        if (chats) {
+        if (chats.length === 0) return res.status(404).json("No Chat")
+        if (chats.length > 0) {
 
             const freindIds = []
             chats.map(chat => {

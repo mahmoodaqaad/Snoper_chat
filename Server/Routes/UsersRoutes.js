@@ -3,6 +3,7 @@
 const express = require("express")
 const { sqlFetchMyData, sqlFetchUserData, UsersNoTmy, sendRequst, AllUsers, myRequstFreind, AcceptedAdded, cancleAcceptRequst, myFreinds, getUser, cancleSentRequst, unfreind, setNoificationFun, getNoification } = require("../Controllers/UserController")
 const { VerifyUser } = require("../Controllers/AuthController")
+const { savedPost, getSaved } = require("../Controllers/postController")
 
 
 
@@ -30,4 +31,8 @@ router.post("/unfreind", VerifyUser, sqlFetchMyData, sqlFetchUserData, unfreind)
 
 router.post("/setNoificationfun", VerifyUser, sqlFetchMyData, setNoificationFun)
 router.get("/getNoification", VerifyUser, sqlFetchMyData, getNoification)
+
+
+router.post("/saved", VerifyUser, savedPost)
+router.get("/getSaved", VerifyUser, getSaved)
 module.exports = router

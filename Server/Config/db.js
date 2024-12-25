@@ -3,12 +3,20 @@
 const mysql = require("mysql")
 
 const db = mysql.createConnection({
-    host: "btyt8yy6yrdidtwhyrik-mysql.services.clever-cloud.com",
-    user: "urmnehtxmrh5o3ox",
-    password: "WHmQ0ujKtxKNuw1DSSIP",
-    database: "btyt8yy6yrdidtwhyrik",
-    port:3306
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "real_chat_app",
+    port: 3306
 });
+
+// const db = mysql.createConnection({
+//     host: "btyt8yy6yrdidtwhyrik-mysql.services.clever-cloud.com",
+//     user: "urmnehtxmrh5o3ox",
+//     password: "WHmQ0ujKtxKNuw1DSSIP",
+//     database: "btyt8yy6yrdidtwhyrik",
+//     port:3306
+// });
 
 db.connect((err) => {
     if (err) {

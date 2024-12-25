@@ -5,11 +5,12 @@ const crypto = require("crypto")
 
 const multer = require('multer');
 const fs = require('fs');
-const path = require('path'); 
+const path = require('path');
 const { sqlFetchUserData } = require("./UserController");
+// const {url}=require("../index")
+const url = "http://localhost:8000/Images/"
+// const url = "https://snoper-chat.onrender.com/Images/"
 
-// const url = "http://localhost:8000/Images/"
-const url = "https://snoper-chat.onrender.com/Images/"
 
 const storage = multer.diskStorage({
     destination: (req, file, cd) => {
@@ -33,9 +34,9 @@ const createPost = (req, res) => {
     const myId = req.CurrentUserId
     const id = crypto.randomUUID()
 
-    const images = req.files.map(file => url + file.filename)
+    // const images = req.files.map(file => url + file.filename)
 
-    const { title } = req.body
+    const { title, images } = req.body
     const sql = "INSERT INTO posts (postId,auther,title,images) VALUES (?,?,?,?)"
     db.query(sql, [id, myId, title, JSON.stringify(images)], (err, response) => {
         if (err) return res.json(err)
@@ -349,7 +350,7 @@ const getPostToAuthor = (req, res) => {
     const getPostToAuthorSql = "SELECT * FROM posts WHERE auther = ? ORDER BY createdAt DESC";
     db.query(getPostToAuthorSql, [id], (err, postData) => {
         if (err) return res.status(500).json({ message: "Error fetching posts", error: err });
-        if (postData.length === 0) return res.status(404).json({ message: "No posts found" });
+        if (postData.length === 0) return res.json({ message: "No posts found" });
 
         // إنشاء قائمة بالوعود (Promises) لجلب بيانات الناشرين
         const postPromises = postData.map((post) => {
@@ -423,5 +424,106 @@ const likePost = (req, res) => {
 
 }
 
+const savedPost = (req, res) => {
 
-module.exports = { createPost, deletePost, Upload, createComments, getPostToAuthor, AllPost, getPost, likePost, getpostData, like_comment, deleteComment }
+    const { savedIt, postId } = req.body
+
+    const myId = req.CurrentUserId
+    const sqlFetchTypeUser = `SELECT saved FROM users WHERE id = ?`;
+    db.query(sqlFetchTypeUser, [myId], (err, data) => {
+        if (err) return res.json(err)
+        if (data.length > 0) {
+            // return data
+
+            const currentSaved = data[0].saved ? JSON.parse(data[0].saved) : []
+
+            const newSaved = savedIt ? [...currentSaved, postId] : currentSaved.filter(item => item !== postId)
+
+            const updatesql = "UPDATE users SET saved =? WHERE id = ? "
+
+            db.query(updatesql, [JSON.stringify(newSaved), myId], (err, response) => {
+
+                if (err) return res.json(err)
+
+                res.json({ message: savedIt ? "saved" : "not saved" })
+            })
+        }
+
+    })
+    // return data
+    // res.json(fetchMyData(myId,""))
+
+
+}
+
+// const fetchMyData = (myId, type) => {
+//     const sqlFetchTypeUser = `SELECT * FROM users WHERE id = ?`;
+//     const data = db.query(sqlFetchTypeUser, [myId], (err, data) => {
+//         if (err) return err
+//         if (data) {
+//             return data
+//         }
+
+//     })
+//     return data
+// }
+
+const getSaved = (req, res) => {
+
+    const myId = req.CurrentUserId
+    const sqlFetchTypeUser = `SELECT saved FROM users WHERE id = ?`;
+    db.query(sqlFetchTypeUser, [myId], (err, savedData) => {
+        if (err) return ("error fetch saved" + err)
+        if (savedData.length > 0) {
+            const currentSaved = savedData[0].saved ? JSON.parse(savedData[0].saved) : []
+
+            const postPromises = currentSaved.map(postId => {
+
+                const fetchPostSql = "SELECT * FROM posts WHERE postId = ? "
+                return new Promise((resolve, reject) => {
+                    db.query(fetchPostSql, [postId], (err, postData) => {
+                        if (err) return ("error fetch post" + err)
+
+                        if (postData.length > 0) {
+                            const authorId = postData[0].auther
+                            const sqlFetchAuthor = "SELECT id, name, profilePhoto, myFreind, resevedRequest, sendRequst FROM users WHERE id = ?";
+                            db.query(sqlFetchAuthor, [authorId], (err, authorData) => {
+                                if (err) return ("error fetch auther" + err)
+                                const author = authorData[0];
+
+                                // تحويل حقول JSON إلى مصفوفات
+                                const myFriends = author.myFreind ? JSON.parse(author.myFreind) : [];
+                                const receivedRequests = author.resevedRequest ? JSON.parse(author.resevedRequest) : [];
+                                const sentRequests = author.sendRequst ? JSON.parse(author.sendRequst) : [];
+
+                                // تحديد حالة العلاقة
+                                let status = "auto";
+                                if (myFriends.includes(myId)) status = "friend";
+                                else if (receivedRequests.includes(myId)) status = "SendRequestAdded";
+                                else if (sentRequests.includes(myId)) status = "resevedRequestAdded";
+                                else if (author.id == myId) status = "my";
+
+
+                                resolve({ ...postData[0], author: { ...authorData[0], status } })
+
+                            })
+
+                        }
+
+                    })
+                })
+
+            })
+
+            // res.json(data)
+
+            Promise.all(postPromises)
+                .then((allPosts) => res.json(allPosts))
+                .catch((error) => res.status(500).json(error));
+
+        }
+    })
+
+}
+
+module.exports = { createPost, deletePost, savedPost, Upload, createComments, getPostToAuthor, AllPost, getPost, likePost, getpostData, like_comment, deleteComment, getSaved }

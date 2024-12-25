@@ -14,7 +14,7 @@ const AllUsers = (req, res) => {
 const sqlFetchMyData = (req, res, next) => {
     const myId = req.CurrentUserId
 
-    const sqlFetchCurrentUser = "SELECT myFreind, resevedRequest, sendRequst,Noification FROM users WHERE id = ?";
+    const sqlFetchCurrentUser = "SELECT myFreind, resevedRequest, sendRequst , Noification FROM users WHERE id = ?";
 
     db.query(sqlFetchCurrentUser, [myId], (err, currentUserData) => {
         if (err) return res.status(500).json({ message: "Error fetching user data", error: err });
@@ -22,8 +22,8 @@ const sqlFetchMyData = (req, res, next) => {
         req.myfreinds = currentUserData[0]?.myFreind ? JSON.parse(currentUserData[0].myFreind) : [];
         req.myReceivedRequests = currentUserData[0]?.resevedRequest ? JSON.parse(currentUserData[0].resevedRequest) : [];
         req.mySentRequests = currentUserData[0]?.sendRequst ? JSON.parse(currentUserData[0].sendRequst) : [];
-        req.Noification = currentUserData[0]?.Noification ? JSON.parse(currentUserData[0].Noification) : [];
-
+        // req.Noification = currentUserData[0]?.Noification ? JSON.parse(currentUserData[0].Noification) : [];
+        //  console.log(currentUserData)
         next()
     })
 }
@@ -388,10 +388,8 @@ const unfreind = (req, res) => {
 const setNoificationFun = (req, res) => {
     // return res.json("hello")
     const myId = req.CurrentUserId
-    const currentNoification = req.Noification
     const newNotif = req.body.notifi
 
-    const Noification = [...currentNoification, newNotif]
 
     const sql = "UPDATE users SET Noification =? WHERE id =?"
     db.query(sql, [JSON.stringify(newNotif), myId], (err, response) => {
