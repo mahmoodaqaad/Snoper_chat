@@ -1,5 +1,6 @@
 const express = require("express")
 const cors = require("cors")
+require("dotenv").config()
 
 const crypto = require("crypto")
 const { Server } = require("socket.io");
@@ -35,7 +36,7 @@ const ExpressServer = app.listen(8000, () => {
 })
 
 
-const io = new Server(ExpressServer, { cors: "http://localhost:3000" })
+const io = new Server(ExpressServer, { cors: process.env.BASE_URL })
 
 let onlineUser = []
 
@@ -228,22 +229,35 @@ io.on("connection", (socket) => {
     const udatebACK = (id, obj) => {
         const sqlFetchCurrentUser = "SELECT Noification FROM users WHERE id = ?";
         db.query(sqlFetchCurrentUser, [id], (err, dataNoft) => {
-            if (err) return console.log("err>>>>>>>>>>>>>>", err);
-
-            const curentnofi = dataNoft[0]?.Noification ? JSON.parse(dataNoft[0]?.Noification) : [];
-            if (dataNoft.length > 0) {
-                const x = [obj, ...curentnofi];
-
-                const sql = "UPDATE users SET Noification = ? WHERE id = ?";
-                db.query(sql, [JSON.stringify(x), id], (err, response) => {
-                    if (err) return console.log(err);
-                    console.log("added");
-                    // console.log(x);
-                });
+            if (err) {
+                console.log("err>>>>>>>>>>>>>>", err);
+                return;
             }
-        });
 
-    }
+            // التأكد من أن البيانات ليست فارغة وقابلة للتحويل إلى JSON
+            let curentnofi = [];
+            if (dataNoft.length > 0 && dataNoft[0]?.Noification) {
+                try {
+                    curentnofi = JSON.parse(dataNoft[0]?.Noification); // محاولة التحويل إلى JSON
+                } catch (e) {
+                    console.log("خطأ في تحليل JSON: ", e);
+                    curentnofi = []; // في حال حدوث خطأ، استخدم مصفوفة فارغة
+                }
+            }
+
+            const x = [obj, ...curentnofi];
+
+            const sql = "UPDATE users SET Noification = ? WHERE id = ?";
+            db.query(sql, [JSON.stringify(x), id], (err, response) => {
+                if (err) {
+                    console.log("خطأ في التحديث: ", err);
+                    return;
+                }
+                console.log("تم الإضافة بنجاح");
+            });
+        });
+    };
+
     // disconnect
     socket.on("disconnect", () => {
 
@@ -254,7 +268,3 @@ io.on("connection", (socket) => {
         }, 2000);
     })
 })
-
-// const url = "https://snoper-chat.onrender.com/Images/"
-// const url = "http://localhost:8000/Images/"
-// module.exports = { url }
