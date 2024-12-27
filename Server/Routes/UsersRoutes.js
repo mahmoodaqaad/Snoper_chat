@@ -11,7 +11,7 @@ const { savedPost, getSaved } = require("../Controllers/postController")
 const router = express.Router()
 
 router.get("/usersnotmy", VerifyUser, sqlFetchMyData, sqlFetchUserData, UsersNoTmy)
-router.get("/allUsers", VerifyUser, AllUsers)
+router.get("/allUsers", AllUsers)
 router.get("/myRequstFreind", VerifyUser, sqlFetchMyData, sqlFetchUserData, myRequstFreind)
 
 router.get("/myFreind", VerifyUser, sqlFetchMyData, myFreinds)
