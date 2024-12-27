@@ -281,7 +281,7 @@ const createComments = (req, res) => {
 
     db.query(sql, [JSON.stringify(newcomments), id], (err, response) => {
         if (err) return res.json({ message: "Error fetching data from post", error: err });
-        res.json("add commmnt succusfully")
+        res.json(created)
     })
 }
 
