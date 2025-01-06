@@ -144,4 +144,26 @@ const myChats = (req, res) => {
 };
 
 
-module.exports = { CreateChat, myChats }
+const deleteChat = (req, res) => {
+
+    const { id } = req.params;
+
+
+    const sql = "DELETE FROM chats WHERE chatId =?"
+
+    db.query(sql, [id], (err, response) => {
+        if (err) return res.json(err)
+
+        const sql = "DELETE FROM messages WHERE chatId =?"
+
+        db.query(sql, [id], (err, response) => {
+            if (err) return res.json(err)
+
+            res.json("delete chat")
+        })
+    })
+
+
+}
+
+module.exports = { CreateChat, myChats, deleteChat }

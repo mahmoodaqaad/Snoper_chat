@@ -56,60 +56,54 @@ io.on("connection", (socket) => {
             })
 
         // send online 
-
-
-
         io.emit("getOnlineUsers", onlineUser)
     })
 
 
-    // sent Messagw
-
-
-    socket.on("sentStatusMessage", (message) => {
-
-        const user = onlineUser.find((user) => user.userId === message.reseved)
-        if (user) {
-            io.to(user.socketId).emit("getStatusMessage", {
-                id: crypto.randomUUID(),
-                massageReaded: message.openChat ? "read" : "reseved",
-                Quickstatus: "readMassage",
-                message,
-                date: new Date()
-            })
-        }
-
-    })
 
 
     // sent Messagw
 
     socket.on("sendMessage", (message) => {
         const user = onlineUser.find((user) => user.userId === message.userReseved);
+
+        if (user) {
+            io.to(user.socketId).emit("getMessage", message);
+
+        }
+        // else {
+        //     udatebACK(message.userReseved, obj)
+        // }
+    });
+
+    // add message notif 
+    socket.on("setMessages", (message) => {
+        const user = onlineUser.find((user) => user.userId === message.reseved)
         const obj = {
             id: crypto.randomUUID(),
             status: "Sent message",
             Quickstatus: "message",
-            message,
+            messageId: message.messageId,
+            senderId: message.author.id,
+            // text: data.text,
             author: {
 
-                id: message?.author?.id,
-                name: message?.author?.name,
-                profilePhoto: message?.author?.profilePhoto
+                id: message.author.id,
+                name: message.author.name,
+                profilePhoto: message.author.profilePhoto
 
             },
             isRead: false,
             date: new Date()
         }
-        if (user) {
-            io.to(user.socketId).emit("getMessage", message);
-            io.to(user.socketId).emit("getNoifications", obj)
-
+        if (user && user.userId) {
+            io.to(user.socketId).emit("getMessagesNotif", obj)
         }
         else {
-            udatebACK(message.userReseved, obj)
+            udatebACK(message.reseved, obj)
         }
-    });
+
+    })
 
     socket.on("addcomment", (data) => {
 
@@ -130,8 +124,9 @@ io.on("connection", (socket) => {
             isRead: false,
             date: new Date()
         }
-        if (user && user.userId !== data.author.id) {
-            io.to(user.socketId).emit("getcomments", obj)
+        if (user) {
+            if (user.userId !== data.author.id)
+                io.to(user.socketId).emit("getcomments", obj)
         }
         else {
             udatebACK(data.reseved, obj)
@@ -159,8 +154,10 @@ io.on("connection", (socket) => {
             isRead: false,
             date: new Date()
         }
-        if (user && user.userId !== data.author.id) {
-            io.to(user.socketId).emit("getLikes", obj)
+        if (user) {
+            if (user.userId !== data.author.id)
+
+                io.to(user.socketId).emit("getLikes", obj)
         }
         else {
             udatebACK(data.reseved, obj)
@@ -170,6 +167,7 @@ io.on("connection", (socket) => {
     })
 
     socket.on("sentrequstAdd", (data) => {
+        // return console.log(data);
 
         const user = onlineUser.find((user) => user.userId === data.reseved)
         const obj = {
@@ -179,9 +177,9 @@ io.on("connection", (socket) => {
 
             author: {
 
-                id: data.author.id,
-                name: data.author.name,
-                profilePhoto: data.author.profilePhoto
+                id: data?.author?.id,
+                name: data.author?.name,
+                profilePhoto: data.author?.profilePhoto
 
             },
             isRead: false,
@@ -227,6 +225,7 @@ io.on("connection", (socket) => {
 
 
     const udatebACK = (id, obj) => {
+
         const sqlFetchCurrentUser = "SELECT Noification FROM users WHERE id = ?";
         db.query(sqlFetchCurrentUser, [id], (err, dataNoft) => {
             if (err) {

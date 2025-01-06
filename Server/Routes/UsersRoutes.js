@@ -29,7 +29,9 @@ router.get("/user/:id", VerifyUser, sqlFetchUserData, getUser)
 router.post("/unfreind", VerifyUser, sqlFetchMyData, sqlFetchUserData, unfreind)
 
 
-router.post("/setNoificationfun", VerifyUser, sqlFetchMyData, setNoificationFun)
+router.post("/setNoificationfun", VerifyUser, setNoificationFun)
+
+
 router.get("/getNoification", VerifyUser, sqlFetchMyData, getNoification)
 
 

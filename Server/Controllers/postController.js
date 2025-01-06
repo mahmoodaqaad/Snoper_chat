@@ -37,11 +37,14 @@ const createPost = (req, res) => {
     // const images = req.files.map(file => url + file.filename)
 
     const { title, images } = req.body
+    const post = {
+        postId: id, title, images: JSON.stringify(images), auther: myId, createdAt: new Date(), comments: "[]", likes: "[]"
+    }
     const sql = "INSERT INTO posts (postId,auther,title,images) VALUES (?,?,?,?)"
     db.query(sql, [id, myId, title, JSON.stringify(images)], (err, response) => {
         if (err) return res.json(err)
 
-        res.json("add post")
+        res.json({ data: { ...post } })
 
     })
 
@@ -80,9 +83,14 @@ const deletePost = (req, res) => {
 const AllPost = (req, res) => {
     const myId = req.CurrentUserId;
 
-    // جلب كل المنشورات
-    const sqlFetchPosts = "SELECT * FROM posts";
-    db.query(sqlFetchPosts, (err, postData) => {
+    // تحديد الصفحة والـ limit
+    const page = parseInt(req.query.page) || 1;
+    const limit = 4;  // تحديد عدد المنشورات في كل صفحة
+    const offset = (page - 1) * limit;
+
+    // جلب المنشورات
+    const sqlFetchPosts = `SELECT * FROM posts LIMIT ?, ?`;
+    db.query(sqlFetchPosts, [offset, limit], (err, postData) => {
         if (err) return res.status(500).json({ message: "Error fetching posts", error: err });
         if (postData.length === 0) return res.status(404).json({ message: "No posts found" });
 
@@ -111,23 +119,23 @@ const AllPost = (req, res) => {
                     else if (sentRequests.includes(myId)) status = "resevedRequestAdded";
                     else if (author.id == myId) status = "my";
 
-
                     resolve({
                         ...post,
                         author: {
                             ...author,
                             status,
-
                         },
                     });
-
                 });
             });
         });
 
         // تنفيذ كل الوعود
         Promise.all(postPromises)
-            .then((allPosts) => res.json(allPosts))
+            .then((allPosts) => {
+                // إرسال المنشورات المحدثة مع البيانات
+                res.json(allPosts);
+            })
             .catch((error) => res.status(500).json(error));
     });
 };
@@ -469,26 +477,26 @@ const savedPost = (req, res) => {
 // }
 
 const getSaved = (req, res) => {
-
-    const myId = req.CurrentUserId
+    const myId = req.CurrentUserId;
     const sqlFetchTypeUser = `SELECT saved FROM users WHERE id = ?`;
     db.query(sqlFetchTypeUser, [myId], (err, savedData) => {
-        if (err) return ("error fetch saved" + err)
+        if (err) return res.status(500).json({ message: "Error fetching saved data", error: err });
+
         if (savedData.length > 0) {
-            const currentSaved = savedData[0].saved ? JSON.parse(savedData[0].saved) : []
+            let currentSaved = savedData[0].saved ? JSON.parse(savedData[0].saved) : [];
 
             const postPromises = currentSaved.map(postId => {
-
-                const fetchPostSql = "SELECT * FROM posts WHERE postId = ? "
+                const fetchPostSql = "SELECT * FROM posts WHERE postId = ?";
                 return new Promise((resolve, reject) => {
                     db.query(fetchPostSql, [postId], (err, postData) => {
-                        if (err) return ("error fetch post" + err)
+                        if (err) return reject({ message: "Error fetching post data", error: err });
 
                         if (postData.length > 0) {
-                            const authorId = postData[0].auther
+                            const authorId = postData[0].auther;
                             const sqlFetchAuthor = "SELECT id, name, profilePhoto, myFreind, resevedRequest, sendRequst FROM users WHERE id = ?";
                             db.query(sqlFetchAuthor, [authorId], (err, authorData) => {
-                                if (err) return ("error fetch auther" + err)
+                                if (err) return reject({ message: "Error fetching author data", error: err });
+
                                 const author = authorData[0];
 
                                 // تحويل حقول JSON إلى مصفوفات
@@ -503,27 +511,36 @@ const getSaved = (req, res) => {
                                 else if (sentRequests.includes(myId)) status = "resevedRequestAdded";
                                 else if (author.id == myId) status = "my";
 
-
-                                resolve({ ...postData[0], author: { ...authorData[0], status } })
-
-                            })
-
+                                resolve({ ...postData[0], author: { ...authorData[0], status } });
+                            });
+                        } else {
+                            // إذا لم يتم العثور على البوست، احذف postId من currentSaved
+                            currentSaved = currentSaved.filter(id => id !== postId);
+                            resolve(null); // لا تضف هذا البوست إلى النتائج
                         }
-
-                    })
-                })
-
-            })
-
-            // res.json(data)
+                    });
+                });
+            });
 
             Promise.all(postPromises)
-                .then((allPosts) => res.json(allPosts))
-                .catch((error) => res.status(500).json(error));
+                .then(allPosts => {
+                    // حذف القيم null من النتائج
+                    const filteredPosts = allPosts.filter(post => post !== null);
 
+                    // تحديث عمود saved في قاعدة البيانات
+                    const updatedSaved = JSON.stringify(currentSaved);
+                    const updateSavedSql = "UPDATE users SET saved = ? WHERE id = ?";
+                    db.query(updateSavedSql, [updatedSaved, myId], (err) => {
+                        if (err) return res.status(500).json({ message: "Error updating saved data", error: err });
+                        res.json(filteredPosts);
+                    });
+                })
+                .catch(error => res.status(500).json(error));
+        } else {
+            res.json([]);
         }
-    })
+    });
+};
 
-}
 
 module.exports = { createPost, deletePost, savedPost, Upload, createComments, getPostToAuthor, AllPost, getPost, likePost, getpostData, like_comment, deleteComment, getSaved }

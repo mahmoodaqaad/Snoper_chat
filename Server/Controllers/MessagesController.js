@@ -28,17 +28,41 @@ const sentMessage = (req, res) => {
 }
 
 const AllChatMessages = (req, res) => {
+    const getuser = req.query.getuser || false
     const { chatId } = req.params
     const sql = "SELECT * FROM messages WHERE chatId = ? ORDER BY createdAt"
     db.query(sql, [chatId], (err, data) => {
         if (err) return res.json(err)
-        res.json({ data })
+
+        if (data.length === 0) { return res.status(404).json("no message") }
+        if (data.length > 0) {
+            if (getuser) {
+
+                const id = data[0].senderId
+                const fetchuserData = "SELECT id ,name ,profilePhoto FROM users WHERE id =?"
+
+                db.query(fetchuserData, [id], (err, userData) => {
+
+                    if (err) return res.json("user error" + err)
+
+                    return res.json({ data, user: userData[0] })
+
+                })
+
+
+            }
+
+            else {
+
+                res.json({ data })
+            }
+        }
 
     })
 }
 
 
-const readMessage = ("/messages/mark-as-read", async (req, res) => {
+const readMessage = (req, res) => {
     const { chatId } = req.body;
 
 
@@ -48,6 +72,34 @@ const readMessage = ("/messages/mark-as-read", async (req, res) => {
         if (err) return res.json(err)
         res.json("readed")
     })
-});
+}
 
-module.exports = { sentMessage, AllChatMessages, readMessage }
+
+
+const deleteMassage = (req, res) => {
+    const { id } = req.params;
+
+
+    const sql = "DELETE FROM messages WHERE messageId =?"
+
+    db.query(sql, [id], (err, response) => {
+        if (err) return res.json(err)
+        res.json("delete Massage")
+    })
+}
+const deleteAllMassage = (req, res) => {
+    const { id } = req.params;
+
+
+    const sql = "DELETE FROM messages WHERE chatId =?"
+
+    db.query(sql, [id], (err, response) => {
+        if (err) return res.json(err)
+
+        res.json("delete all messages")
+    })
+}
+
+
+
+module.exports = { sentMessage, AllChatMessages, readMessage, deleteMassage, deleteAllMassage }

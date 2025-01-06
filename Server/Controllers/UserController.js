@@ -387,22 +387,34 @@ const unfreind = (req, res) => {
 
 const setNoificationFun = (req, res) => {
     // return res.json("hello")
+    // res.json("heloo word")
     const myId = req.CurrentUserId
     const newNotif = req.body.notifi
 
 
-    const sql = "UPDATE users SET Noification =? WHERE id =?"
+    const sql = "UPDATE users SET Noification = ? WHERE id =?"
     db.query(sql, [JSON.stringify(newNotif), myId], (err, response) => {
 
         if (err) return res.status(404).json("error" + err)
 
-        return res.json("add notif")
+        return res.json({
+            myId
+            , newNotif
+        })
     })
 
 
 }
 const getNoification = (req, res) => {
-    res.json({ data: req.Noification })
+    const myId = req.CurrentUserId
+
+    const fetchfreindsSql = `SELECT Noification FROM users WHERE id = ?`;
+    db.query(fetchfreindsSql, [myId], (err, currentUserData) => {
+        if (err) return res.status(500).json({ message: "Error fetching freind data", error: err });
+        const Noification = currentUserData[0]?.Noification ? JSON.parse(currentUserData[0].Noification) : [];
+        res.json({ data: Noification })
+    });
+
 }
 
 module.exports = { setNoificationFun, getNoification, UsersNoTmy, sqlFetchMyData, sqlFetchUserData, sendRequst, AllUsers, myRequstFreind, AcceptedAdded, cancleAcceptRequst, myFreinds, getUser, cancleSentRequst, unfreind }
