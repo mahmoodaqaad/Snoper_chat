@@ -23,6 +23,8 @@ app.use('/Images', express.static(path.join(__dirname, 'Public/Images')));
 app.use(cookieParser());
 app.use(cors())
 app.use(express.json())
+
+// rootes 
 app.use("/api", AuthRoutes)
 app.use("/api/users", UserRoutes)
 app.use("/api/chats", chatRoutes)
@@ -104,6 +106,56 @@ io.on("connection", (socket) => {
         }
 
     })
+
+    socket.on("updatemessge", (data) => {
+        const user = onlineUser.find((user) => user.userId === data.reseved)
+        const message = data.message
+        if (user) {
+            io.to(user.socketId).emit("getUpdateMessage", message);
+
+        }
+
+    })
+
+    // Typing Status
+    socket.on("typing", (data) => {
+        const user = onlineUser.find((user) => user.userId === data.receiverId);
+        if (user) {
+            io.to(user.socketId).emit("userTyping", { senderId: data.senderId });
+        }
+    });
+
+    socket.on("stopTyping", (data) => {
+        const user = onlineUser.find((user) => user.userId === data.receiverId);
+        if (user) {
+            io.to(user.socketId).emit("userStopTyping", { senderId: data.senderId });
+        }
+    });
+
+    // Message Read Status
+    socket.on("messageRead", (data) => {
+        const user = onlineUser.find((user) => user.userId === data.senderId);
+        if (user) {
+            io.to(user.socketId).emit("messageReadStatus", {
+                messageId: data.messageId,
+                chatId: data.chatId,
+                readerId: data.readerId
+            });
+        }
+    });
+
+    // Message Received Status (Delivered)
+    socket.on("messageReceived", (data) => {
+        const user = onlineUser.find((user) => user.userId === data.senderId);
+        if (user) {
+            io.to(user.socketId).emit("messageReceivedStatus", {
+                messageId: data.messageId,
+                receiverId: data.receiverId
+            });
+        }
+    });
+
+
 
     socket.on("addcomment", (data) => {
 

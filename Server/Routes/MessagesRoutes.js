@@ -5,7 +5,7 @@ const { sentMessage, AllChatMessages, readMessage, deleteMassage, deleteAllMassa
 
 router.post("/sent", VerifyUser, sentMessage)
 router.get("/allMessages/:chatId", VerifyUser, AllChatMessages)
-router.put("/mark-as-read", VerifyUser, readMessage)
+router.put("/mark-as-read/:id", VerifyUser, readMessage)
 router.delete("/deleteMassage/:id", VerifyUser, deleteMassage)
 router.delete("/deleteAllMassage/:id", VerifyUser, deleteAllMassage)
 

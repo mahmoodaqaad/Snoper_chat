@@ -63,12 +63,12 @@ const AllChatMessages = (req, res) => {
 
 
 const readMessage = (req, res) => {
-    const { chatId } = req.body;
+    const { id } = req.params;
 
 
-    const sql = "UPDATE messages SET statusRead =? WHERE chatId = ?"
+    const sql = "UPDATE messages SET statusRead =? WHERE messageId = ?"
 
-    db.query(sql, [true, chatId], (err, response) => {
+    db.query(sql, [true, id], (err, response) => {
         if (err) return res.json(err)
         res.json("readed")
     })
