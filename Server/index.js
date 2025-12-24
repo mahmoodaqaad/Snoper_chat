@@ -11,6 +11,7 @@ const AuthRoutes = require("./Routes/AuthRoutes")
 const chatRoutes = require("./Routes/ChatRoutes")
 const MessagesRoutes = require("./Routes/MessagesRoutes")
 const PostRoutes = require("./Routes/PostRoutes")
+const SearchRoutes = require("./Routes/SearchRoutes")
 const app = express()
 const cookieParser = require('cookie-parser');
 const db = require("./Config/db");
@@ -30,6 +31,7 @@ app.use("/api/users", UserRoutes)
 app.use("/api/chats", chatRoutes)
 app.use("/api/messages", MessagesRoutes)
 app.use("/api/post", PostRoutes)
+app.use("/api/search", SearchRoutes)
 
 
 
@@ -73,9 +75,9 @@ io.on("connection", (socket) => {
             io.to(user.socketId).emit("getMessage", message);
 
         }
-        // else {
-        //     udatebACK(message.userReseved, obj)
-        // }
+        else {
+            udatebACK(message.userReseved, message)
+        }
     });
 
     // add message notif 
@@ -98,11 +100,14 @@ io.on("connection", (socket) => {
             isRead: false,
             date: new Date()
         }
+        // Always update DB
+
         if (user && user.userId) {
             io.to(user.socketId).emit("getMessagesNotif", obj)
         }
         else {
             udatebACK(message.reseved, obj)
+
         }
 
     })
@@ -176,12 +181,15 @@ io.on("connection", (socket) => {
             isRead: false,
             date: new Date()
         }
+        // Always update DB
+
         if (user) {
             if (user.userId !== data.author.id)
                 io.to(user.socketId).emit("getcomments", obj)
         }
         else {
             udatebACK(data.reseved, obj)
+
         }
 
     })
@@ -206,13 +214,12 @@ io.on("connection", (socket) => {
             isRead: false,
             date: new Date()
         }
+        // Always update DB
+        udatebACK(data.reseved, obj)
+
         if (user) {
             if (user.userId !== data.author.id)
-
                 io.to(user.socketId).emit("getLikes", obj)
-        }
-        else {
-            udatebACK(data.reseved, obj)
         }
 
 
@@ -237,11 +244,11 @@ io.on("connection", (socket) => {
             isRead: false,
             date: new Date()
         }
+        // Always update DB
+        udatebACK(data.reseved, obj)
+
         if (user) {
             io.to(user.socketId).emit("getrequstAdd", obj)
-        }
-        else {
-            udatebACK(data.reseved, obj)
         }
 
     })
@@ -266,11 +273,11 @@ io.on("connection", (socket) => {
             isRead: false,
             date: new Date()
         }
+        // Always update DB
+        udatebACK(data.reseved, obj)
+
         if (user) {
             io.to(user.socketId).emit("getAcceptRequst", obj)
-        }
-        else {
-            udatebACK(data.reseved, obj)
         }
 
     })

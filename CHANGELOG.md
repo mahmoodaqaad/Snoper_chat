@@ -5,6 +5,13 @@ All notable changes to the Real Chat App will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-12-21
+
+### Added
+- **Advanced Search**: Unified search system for users and posts with real-time suggestions.
+- **Debounced Search Bar**: Improved performance with 300ms delay during typing.
+- **Glassmorphism Suggestions Dropdown**: Visual feedback for search results.
+
 ## [1.2.0] - 2025-12-21
 
 ### Added

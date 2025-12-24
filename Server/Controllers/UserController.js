@@ -318,7 +318,7 @@ const getUser = (req, res) => {
     const { id } = req.params
 
     const myId = req.CurrentUserId
-    const sqlFetchCurrentUser = "SELECT id,  name, profilePhoto  FROM users WHERE id = ?";
+    const sqlFetchCurrentUser = "SELECT id,  name,email, profilePhoto  FROM users WHERE id = ?";
 
     db.query(sqlFetchCurrentUser, [id], (err, data) => {
         if (err) return res.status(500).json({ message: "Error fetching user data", error: err });
